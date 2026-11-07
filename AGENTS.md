@@ -27,3 +27,19 @@
 - TypeScript закреплён на 6.x: `@hey-api/openapi-ts` не работает с TypeScript 7.
 - Коммиты — Conventional Commits (`feat:`, `fix:`, `chore:`, `docs:`, `test:`, `refactor:`, `ci:`; scope по желанию: `feat(backend): ...`). Формат проверяет commit-msg хук hk.
 - Файл `.github/workflows/hexlet-check.yml` не изменять и не удалять.
+
+## Agent skills
+
+Инженерные скиллы mattpocock/skills ставятся в `.claude/skills/` (в git не хранятся), список и версии — в `skills-lock.json`. Восстановить после клонирования: `npx skills@latest experimental_install`; обновить: `npx skills@latest update -p`. Работа идёт циклом: обсуждение → спецификация (`/to-spec`) → тикеты (`/to-tickets`) → реализация (`/implement-spec`). Перед работой над задачей прочитать её issue, связанные тикеты и решения из `docs/adr/`.
+
+### Issue tracker
+
+GitHub Issues в `Hyper-glitch/ai-for-developers-project-386`, работа через `gh`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Стандартные пять меток: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: словарь в `GLOSSARY.md`, решения в `docs/adr/` в корне репозитория. See `docs/agents/domain.md`.
