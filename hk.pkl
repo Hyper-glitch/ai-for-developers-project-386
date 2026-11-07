@@ -1,0 +1,62 @@
+amends "package://github.com/jdx/hk/releases/download/v2.11.1/hk@2.11.1#/Config.pkl"
+import "package://github.com/jdx/hk/releases/download/v2.11.1/hk@2.11.1#/Builtins.pkl"
+
+// Tools live in project environments (backend/.venv, frontend/node_modules),
+// so steps call them from there instead of relying on global binaries.
+local linters = new Mapping<String, Step> {
+  ["ruff"] {
+    dir = "backend"
+    glob = List("**/*.py")
+    exclude = List("app/generated/**")
+    check = "uv run ruff check {{files}}"
+    fix = "uv run ruff check --fix {{files}}"
+  }
+  ["ruff-format"] {
+    dir = "backend"
+    glob = List("**/*.py")
+    exclude = List("app/generated/**")
+    check = "uv run ruff format --check {{files}}"
+    fix = "uv run ruff format {{files}}"
+  }
+  ["oxlint"] {
+    dir = "frontend"
+    glob = List("**/*.ts", "**/*.tsx")
+    exclude = List("src/client/**")
+    check = "npx oxlint --deny-warnings {{files}}"
+    fix = "npx oxlint --fix {{files}}"
+  }
+  ["prettier"] {
+    dir = "frontend"
+    glob = List("**/*.ts", "**/*.tsx", "**/*.json", "**/*.css", "**/*.html")
+    exclude = List("src/client/**", "package-lock.json")
+    check = "npx prettier --check {{files}}"
+    fix = "npx prettier --write {{files}}"
+  }
+}
+
+hooks {
+  ["pre-commit"] {
+    fix = true
+    stash = "git"
+    steps = linters
+  }
+  ["commit-msg"] {
+    steps {
+      ["conventional-commit"] = Builtins.check_conventional_commit
+    }
+  }
+  ["pre-push"] {
+    steps {
+      ["check"] {
+        check = "mise run check"
+      }
+    }
+  }
+  ["check"] {
+    steps = linters
+  }
+  ["fix"] {
+    fix = true
+    steps = linters
+  }
+}
