@@ -1,0 +1,146 @@
+min_version = "2026.11.3"
+
+[settings]
+experimental = true
+
+[tools]
+python = "3.13.18"
+node = "24.22.2"
+uv = "0.13.7"
+hk = "2.11.1"
+pkl = "0.33.0"
+pitchfork = "2.33.1"
+
+[env]
+# uv should use the Python pinned above instead of downloading its own.
+UV_PYTHON_DOWNLOADS = "never"
+UV_PYTHON_PREFERENCE = "only-system"
+HK_MISE = "1"
+
+[hooks]
+postinstall = { task = "install" }
+
+# --- dependencies ---
+
+[tasks."install:backend"]
+description = "Install backend dependencies into backend/.venv"
+dir = "backend"
+run = "uv sync --locked"
+
+[tasks."install:frontend"]
+description = "Install frontend dependencies"
+dir = "frontend"
+run = "npm ci"
+
+[tasks."install:typespec"]
+description = "Install TypeSpec compiler and emitters"
+dir = "typespec"
+run = "npm ci"
+
+[tasks."install:hooks"]
+description = "Install git hooks managed by hk"
+run = "hk install --mise"
+
+[tasks.install]
+description = "Install all dependencies and git hooks"
+depends = ["install:backend", "install:frontend", "install:typespec", "install:hooks"]
+
+# --- code generation: TypeSpec -> OpenAPI -> clients ---
+
+[tasks."gen:openapi"]
+description = "Compile TypeSpec contract into openapi/openapi.yaml"
+dir = "typespec"
+run = "npx tsp compile ."
+
+[tasks."gen:client"]
+description = "Generate the frontend TypeScript SDK from OpenAPI"
+dir = "frontend"
+run = "npm run gen:client"
+depends = ["gen:openapi"]
+
+[tasks."gen:models"]
+description = "Generate backend Pydantic models from OpenAPI"
+dir = "backend"
+run = "uv run datamodel-codegen --input ../openapi/openapi.yaml --input-file-type openapi --output app/generated/models.py --output-model-type pydantic_v2.BaseModel --use-annotated --target-python-version 3.13 --disable-timestamp --formatters builtin"
+depends = ["gen:openapi"]
+
+[tasks.gen]
+description = "Regenerate OpenAPI spec, frontend SDK and backend models"
+depends = ["gen:client", "gen:models"]
+
+# --- run ---
+
+[tasks."dev:backend"]
+description = "Run the backend with reload on http://localhost:8000"
+dir = "backend"
+run = "uv run fastapi dev --port 8000"
+
+[tasks."dev:frontend"]
+description = "Run the Vite dev server on http://localhost:5173"
+dir = "frontend"
+run = "npm run dev"
+
+[tasks.build]
+description = "Build the frontend for production"
+dir = "frontend"
+run = "npm run build"
+
+# --- checks ---
+
+[tasks."lint:backend"]
+dir = "backend"
+run = ["uv run ruff check .", "uv run ruff format --check ."]
+
+[tasks."lint:frontend"]
+dir = "frontend"
+run = ["npm run lint", "npm run format:check"]
+
+[tasks.lint]
+description = "Run all linters and format checks"
+depends = ["lint:backend", "lint:frontend"]
+
+[tasks."typecheck:backend"]
+dir = "backend"
+run = "uv run mypy"
+
+[tasks."typecheck:frontend"]
+dir = "frontend"
+run = "npm run typecheck"
+
+[tasks.typecheck]
+description = "Run type checkers"
+depends = ["typecheck:backend", "typecheck:frontend"]
+
+[tasks."test:backend"]
+dir = "backend"
+run = "uv run pytest"
+
+[tasks."test:frontend"]
+dir = "frontend"
+run = "npm test"
+
+[tasks.test]
+description = "Run all tests"
+depends = ["test:backend", "test:frontend"]
+
+[tasks."gen:verify"]
+description = "Fail if generated files are out of date with the TypeSpec contract"
+depends = ["gen"]
+run = "git diff --exit-code -- openapi frontend/src/client backend/app/generated"
+
+[tasks.check]
+description = "Run every check: generated code, linters, type checks, tests"
+# Generation runs first: it rewrites files that linters and tests read.
+depends = ["gen:verify"]
+run = [{ task = "lint" }, { task = "typecheck" }, { task = "test" }]
+
+# --- background dev servers ---
+
+[daemons.api]
+run = "exec mise run dev:backend"
+ready_port = 8000
+
+[daemons.web]
+run = "exec mise run dev:frontend"
+ready_port = 5173
+depends = ["api"]

@@ -23,20 +23,30 @@
 
 ## Стек
 
-- Разное
+- Контракт: TypeSpec → OpenAPI → клиентский SDK (`@hey-api/openapi-ts`) и Pydantic-модели (`datamodel-code-generator`)
+- Бекенд: Python 3.13, FastAPI, uv, ruff, mypy, pytest
+- Фронтенд: TypeScript, React, Vite, Mantine, oxlint, prettier, vitest
+- Окружение и задачи: mise, git-хуки: hk, CI: GitHub Actions
 
 ## Установка
 
-<!-- Опишите установку: клонирование, зависимости, переменные окружения -->
+Нужен только [mise](https://mise.jdx.dev/) — остальные инструменты он ставит сам в версиях из `mise.toml`.
 
 ```bash
 git clone https://github.com/Hyper-glitch/ai-for-developers-project-386.git
 cd ai-for-developers-project-386
+mise trust
+mise install   # инструменты + зависимости + git-хуки
 ```
 
 ## Использование
 
-<!-- Добавьте примеры запуска и запись asciinema — именно это смотрит работодатель -->
+```bash
+mise daemons start   # бекенд http://localhost:8000 (docs: /docs) и фронтенд http://localhost:5173
+mise daemons stop
+mise run check       # линтеры, проверка типов, тесты — то же, что в CI
+mise run gen         # пересобрать OpenAPI и клиентов после правки typespec/main.tsp
+```
 
 ---
 
