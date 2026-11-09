@@ -9,7 +9,7 @@ const steps = [
   'Оставьте имя и email — бронирование готово.',
 ];
 
-function BookButton() {
+function CatalogButton() {
   return (
     <Button component={Link} to={paths.catalog} size="md" w="fit-content">
       Записаться
@@ -25,7 +25,7 @@ export function HomePage() {
         <Text size="lg" c="dimmed">
           Выберите удобное время для звонка — без регистрации и переписки
         </Text>
-        <BookButton />
+        <CatalogButton />
       </Stack>
 
       <Stack gap="sm">
@@ -44,7 +44,7 @@ export function HomePage() {
         <Badge variant="light">Запись на 14 дней вперёд</Badge>
       </Group>
 
-      <BookButton />
+      <CatalogButton />
     </Stack>
   );
 }

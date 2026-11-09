@@ -3,11 +3,15 @@ import { describe, expect, it } from 'vitest';
 
 import { renderAt } from './test/render';
 
+function expectHomePage() {
+  expect(screen.getByRole('heading', { level: 1, name: 'Запись на звонок' })).toBeInTheDocument();
+}
+
 describe('Главная страница', () => {
   it('объясняет сервис и показывает, как записаться', () => {
     renderAt('/');
 
-    expect(screen.getByRole('heading', { level: 1, name: 'Запись на звонок' })).toBeInTheDocument();
+    expectHomePage();
 
     const steps = within(screen.getByRole('list', { name: 'Как это работает' })).getAllByRole(
       'listitem',
@@ -24,7 +28,10 @@ describe('Главная страница', () => {
 });
 
 describe('Переход в каталог типов встреч', () => {
-  it.each([0, 1])('кнопка «Записаться» №%i открывает каталог', async (index) => {
+  it.each([
+    { where: 'в первом экране', index: 0 },
+    { where: 'внизу страницы', index: 1 },
+  ])('кнопка «Записаться» $where открывает каталог', async ({ index }) => {
     const { user } = renderAt('/');
 
     const buttons = screen.getAllByRole('link', { name: 'Записаться' });
@@ -43,7 +50,7 @@ describe('Каталог типов встреч', () => {
 
     await user.click(screen.getByRole('link', { name: 'На главную' }));
 
-    expect(screen.getByRole('heading', { level: 1, name: 'Запись на звонок' })).toBeInTheDocument();
+    expectHomePage();
   });
 });
 
@@ -57,6 +64,6 @@ describe('Неизвестный адрес', () => {
 
     await user.click(screen.getByRole('link', { name: 'На главную' }));
 
-    expect(screen.getByRole('heading', { level: 1, name: 'Запись на звонок' })).toBeInTheDocument();
+    expectHomePage();
   });
 });
