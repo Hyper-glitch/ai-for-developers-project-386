@@ -1,35 +1,40 @@
-import { Badge, Container, Group, Stack, Text, Title } from '@mantine/core';
-import { useEffect, useState } from 'react';
+import { Anchor, Box, Container } from '@mantine/core';
+import { Link, Outlet, Route, Routes } from 'react-router';
 
-import { systemHealth } from './api';
+import { CatalogPage } from './pages/CatalogPage';
+import { HomePage } from './pages/HomePage';
+import { NotFoundPage } from './pages/NotFoundPage';
+import { paths } from './paths';
 
-type ApiState = 'checking' | 'up' | 'down';
-
-const badge: Record<ApiState, { color: string; label: string }> = {
-  checking: { color: 'gray', label: 'проверяем…' },
-  up: { color: 'green', label: 'доступен' },
-  down: { color: 'red', label: 'недоступен' },
-};
+function Layout() {
+  return (
+    <>
+      <Box
+        component="header"
+        py="md"
+        style={{ borderBottom: '1px solid var(--mantine-color-default-border)' }}
+      >
+        <Container size="sm">
+          <Anchor component={Link} to={paths.home} fw={700} underline="never">
+            Запись на звонок
+          </Anchor>
+        </Container>
+      </Box>
+      <Container component="main" size="sm" py="xl">
+        <Outlet />
+      </Container>
+    </>
+  );
+}
 
 export default function App() {
-  const [api, setApi] = useState<ApiState>('checking');
-
-  useEffect(() => {
-    systemHealth()
-      .then(({ data }) => setApi(data?.status === 'ok' ? 'up' : 'down'))
-      .catch(() => setApi('down'));
-  }, []);
-
   return (
-    <Container size="sm" py="xl">
-      <Stack gap="md">
-        <Title order={1}>Запись на звонок</Title>
-        <Text c="dimmed">Каркас приложения. Функциональность появится на следующих шагах.</Text>
-        <Group gap="xs">
-          <Text>Бекенд:</Text>
-          <Badge color={badge[api].color}>{badge[api].label}</Badge>
-        </Group>
-      </Stack>
-    </Container>
+    <Routes>
+      <Route element={<Layout />}>
+        <Route index element={<HomePage />} />
+        <Route path={paths.catalog} element={<CatalogPage />} />
+        <Route path="*" element={<NotFoundPage />} />
+      </Route>
+    </Routes>
   );
 }
