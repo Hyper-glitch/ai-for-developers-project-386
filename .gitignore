@@ -18,3 +18,5 @@ node_modules/
 # Claude Code: skills are restored from skills-lock.json, local settings stay local
 .claude/skills/
 .claude/settings.local.json
+.claude/worktrees/
+.agents/
