@@ -4,7 +4,7 @@ from collections.abc import Iterator
 from datetime import UTC, datetime, time, timedelta
 from zoneinfo import ZoneInfo
 
-from app.generated.models import Slot
+from app.generated.models import Reason, Slot
 
 MOSCOW = ZoneInfo("Europe/Moscow")
 WINDOW_DAYS = 14
@@ -18,19 +18,19 @@ def get_now() -> datetime:
     return datetime.now(UTC)
 
 
-def unavailable_reason(start: datetime, minutes: int, now: datetime) -> str | None:
+def unavailable_reason(start: datetime, minutes: int, now: datetime) -> Reason | None:
     """Return the first applicable reason in booking validation order."""
     if start <= now:
-        return "past"
+        return Reason.past
     local = start.astimezone(MOSCOW)
     today = now.astimezone(MOSCOW).date()
     if not 0 <= (local.date() - today).days < WINDOW_DAYS:
-        return "outside_window"
+        return Reason.outside_window
     if local.minute % GRID_MINUTES or local.second or local.microsecond:
-        return "off_grid"
+        return Reason.off_grid
     closing = datetime.combine(local.date(), CLOSE, MOSCOW)
     if local.weekday() >= 5 or local.time() < OPEN or local + timedelta(minutes=minutes) > closing:
-        return "outside_working_hours"
+        return Reason.outside_working_hours
     return None
 
 

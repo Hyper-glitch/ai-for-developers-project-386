@@ -1,6 +1,10 @@
 // Single entry point to the generated SDK: configures the base URL once.
 import { client } from '../client/client.gen';
 import {
+  bookingsCreate,
+  type CreateBooking,
+  type Booking,
+  type BookingsCreateError,
   meetingTypesCreate,
   meetingTypesGet,
   meetingTypesSlots,
@@ -39,4 +43,11 @@ export async function getMeetingType(id: string): Promise<MeetingType> {
 export async function listSlots(id: string): Promise<Slot[]> {
   const { data } = await meetingTypesSlots({ path: { id }, throwOnError: true });
   return data;
+}
+
+export async function createBooking(
+  body: CreateBooking,
+): Promise<{ data: Booking; error?: never } | { data?: never; error: BookingsCreateError }> {
+  const { data, error } = await bookingsCreate({ body });
+  return data ? { data } : { error };
 }

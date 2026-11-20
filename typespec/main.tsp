@@ -35,9 +35,9 @@ model FieldError {
 }
 
 model Error {
-  code: string;
+  code: "validation_error" | "meeting_type_not_found" | "slot_unavailable" | "conflict";
   message: string;
-  reason?: string;
+  reason?: "past" | "outside_window" | "off_grid" | "outside_working_hours";
   fields?: FieldError[];
 }
 
@@ -64,6 +64,33 @@ interface MeetingTypes {
   @post op create(@body input: CreateMeetingType): {
     @statusCode status: 201;
     @body result: MeetingType;
+  } | {
+    @statusCode status: 422;
+    @body error: Error;
+  };
+}
+
+model CreateBooking {
+  @format("uuid") meetingTypeId: string;
+  startAt: utcDateTime;
+  @minLength(1) @maxLength(100) guestName: string;
+  @format("email") guestEmail: string;
+}
+
+model Booking extends CreateBooking {
+  @format("uuid") id: string;
+  endAt: utcDateTime;
+}
+
+@route("/bookings")
+@tag("bookings")
+interface Bookings {
+  @post op create(@body input: CreateBooking): {
+    @statusCode status: 201;
+    @body result: Booking;
+  } | MeetingTypeNotFound | {
+    @statusCode status: 409;
+    @body error: Error;
   } | {
     @statusCode status: 422;
     @body error: Error;

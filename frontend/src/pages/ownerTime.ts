@@ -28,3 +28,6 @@ export function bookingDays(now: Date) {
     return result;
   });
 }
+
+const fullDate = new Intl.DateTimeFormat('ru-RU', { timeZone, dateStyle: 'long' });
+export const ownerDate = (instant: string) => fullDate.format(new Date(instant));

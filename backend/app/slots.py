@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, Request
 
 from app.generated.models import Error, MeetingType, Slot
 from app.schedule import get_now, scheduled_slots
-from app.store import Store, get_store
+from app.store import Store, get_store, overlaps
 
 router = APIRouter(tags=["meeting-types"], responses={404: {"model": Error}})
 # Both malformed and unknown IDs mean the public link is unavailable (404).
@@ -46,5 +46,11 @@ def get_meeting_type(item: Annotated[MeetingType, Depends(find_meeting_type)]) -
 def list_slots(
     item: Annotated[MeetingType, Depends(find_meeting_type)],
     now: Annotated[datetime, Depends(get_now)],
+    store: Annotated[Store, Depends(get_store)],
 ) -> list[Slot]:
-    return list(scheduled_slots(item.durationMinutes.value, now))
+    occupied = store.bookings()
+    return [
+        slot
+        for slot in scheduled_slots(item.durationMinutes.value, now)
+        if not overlaps(slot.startAt, slot.endAt, occupied)
+    ]

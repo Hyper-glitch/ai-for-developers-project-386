@@ -15,4 +15,4 @@ def client() -> Iterator[TestClient]:
         yield test_client
 
 
-pytest_plugins = ["tests.plugins.catalog"]
+pytest_plugins = ["tests.plugins.catalog", "tests.plugins.bookings"]
