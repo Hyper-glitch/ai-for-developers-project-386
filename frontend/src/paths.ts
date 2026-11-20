@@ -2,4 +2,5 @@
 export const paths = {
   home: '/',
   catalog: '/book',
+  meetingType: (id: string) => `/book/${id}`,
 } as const;

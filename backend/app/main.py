@@ -5,10 +5,13 @@ response models come from ``app/generated``, which is regenerated from the
 OpenAPI spec with ``mise run gen`` and must not be edited by hand.
 """
 
-from fastapi import FastAPI
+from typing import Annotated
+
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.generated.models import Health, Status
+from app.generated.models import Health, MeetingType, Status
+from app.store import Store, get_store
 
 app = FastAPI(title="Booking API")
 
@@ -25,3 +28,9 @@ app.add_middleware(
 def health() -> Health:
     """Report that the service is up."""
     return Health(status=Status.ok)
+
+
+@app.get("/meeting-types", operation_id="MeetingTypes_list", tags=["meeting-types"])
+def list_meeting_types(store: Annotated[Store, Depends(get_store)]) -> list[MeetingType]:
+    """Show the catalog in the order the owner created the types."""
+    return list(store.meeting_types.values())
