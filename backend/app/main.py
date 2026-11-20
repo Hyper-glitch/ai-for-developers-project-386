@@ -5,6 +5,7 @@ response models come from ``app/generated``, which is regenerated from the
 OpenAPI spec with ``mise run gen`` and must not be edited by hand.
 """
 
+import os
 from typing import Annotated
 from uuid import uuid4
 
@@ -33,7 +34,12 @@ app = FastAPI(title="Booking API")
 # The Vite dev server runs on a different origin during local development.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=[
+        origin.strip()
+        for origin in os.getenv(
+            "CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173"
+        ).split(",")
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
 )

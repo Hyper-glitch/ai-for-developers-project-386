@@ -50,6 +50,22 @@ export type Slot = {
     endAt: string;
 };
 
+export type BookingsListData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/bookings';
+};
+
+export type BookingsListResponses = {
+    /**
+     * The request has succeeded.
+     */
+    200: Array<Booking>;
+};
+
+export type BookingsListResponse = BookingsListResponses[keyof BookingsListResponses];
+
 export type BookingsCreateData = {
     body: CreateBooking;
     path?: never;

@@ -2,6 +2,7 @@
 import { client } from '../client/client.gen';
 import {
   bookingsCreate,
+  bookingsList,
   type CreateBooking,
   type Booking,
   type BookingsCreateError,
@@ -50,4 +51,9 @@ export async function createBooking(
 ): Promise<{ data: Booking; error?: never } | { data?: never; error: BookingsCreateError }> {
   const { data, error } = await bookingsCreate({ body });
   return data ? { data } : { error };
+}
+
+export async function listBookings(): Promise<Booking[]> {
+  const { data } = await bookingsList({ throwOnError: true });
+  return data;
 }
