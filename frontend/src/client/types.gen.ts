@@ -33,6 +33,11 @@ export type MeetingType = CreateMeetingType & {
     id: string;
 };
 
+export type Slot = {
+    startAt: string;
+    endAt: string;
+};
+
 export type SystemHealthData = {
     body?: never;
     path?: never;
@@ -89,3 +94,57 @@ export type MeetingTypesCreateResponses = {
 };
 
 export type MeetingTypesCreateResponse = MeetingTypesCreateResponses[keyof MeetingTypesCreateResponses];
+
+export type MeetingTypesGetData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/meeting-types/{id}';
+};
+
+export type MeetingTypesGetErrors = {
+    /**
+     * The server cannot find the requested resource.
+     */
+    404: Error;
+};
+
+export type MeetingTypesGetError = MeetingTypesGetErrors[keyof MeetingTypesGetErrors];
+
+export type MeetingTypesGetResponses = {
+    /**
+     * The request has succeeded.
+     */
+    200: MeetingType;
+};
+
+export type MeetingTypesGetResponse = MeetingTypesGetResponses[keyof MeetingTypesGetResponses];
+
+export type MeetingTypesSlotsData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/meeting-types/{id}/slots';
+};
+
+export type MeetingTypesSlotsErrors = {
+    /**
+     * The server cannot find the requested resource.
+     */
+    404: Error;
+};
+
+export type MeetingTypesSlotsError = MeetingTypesSlotsErrors[keyof MeetingTypesSlotsErrors];
+
+export type MeetingTypesSlotsResponses = {
+    /**
+     * The request has succeeded.
+     */
+    200: Array<Slot>;
+};
+
+export type MeetingTypesSlotsResponse = MeetingTypesSlotsResponses[keyof MeetingTypesSlotsResponses];

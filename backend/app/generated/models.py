@@ -7,7 +7,7 @@ from enum import Enum, StrEnum
 from typing import Annotated
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import AwareDatetime, BaseModel, Field
 
 
 class DurationMinutes(Enum):
@@ -42,6 +42,11 @@ class Health(BaseModel):
 
 class MeetingType(CreateMeetingType):
     id: UUID
+
+
+class Slot(BaseModel):
+    startAt: AwareDatetime
+    endAt: AwareDatetime
 
 
 class Error(BaseModel):

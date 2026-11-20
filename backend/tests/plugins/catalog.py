@@ -1,12 +1,14 @@
 """Isolated catalog and example meeting types for HTTP tests."""
 
 from collections.abc import Iterator
+from datetime import datetime
 
 import pytest
 from fastapi.testclient import TestClient
 
 from app.generated.models import MeetingType
 from app.main import app
+from app.schedule import get_now
 from app.store import Store, get_store
 
 
@@ -34,3 +36,14 @@ def published_types(client: TestClient) -> list[MeetingType]:
         types.append(MeetingType.model_validate(response.json()))
     assert types[0].id != types[1].id
     return types
+
+
+@pytest.fixture(autouse=True)
+def now() -> Iterator[datetime]:
+    """Freeze Tuesday noon in Moscow for availability and booking requests."""
+    instant = datetime.fromisoformat("2026-11-03T09:00:00Z")
+    app.dependency_overrides[get_now] = lambda: instant
+    try:
+        yield instant
+    finally:
+        del app.dependency_overrides[get_now]

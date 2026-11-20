@@ -15,6 +15,8 @@ from fastapi.responses import JSONResponse
 from pydantic import ConfigDict
 
 from app.generated.models import CreateMeetingType, Error, FieldError, Health, MeetingType, Status
+from app.slots import MeetingTypeNotFoundError
+from app.slots import router as slots_router
 from app.store import Store, get_store
 
 app = FastAPI(title="Booking API")
@@ -72,3 +74,12 @@ async def validation_error(request: Request, exc: RequestValidationError) -> JSO
         fields.append(FieldError(field=name, message=issue["msg"]))
     error = Error(code="validation_error", message="Invalid request", fields=fields)
     return JSONResponse(status_code=422, content=error.model_dump(exclude_none=True))
+
+
+@app.exception_handler(MeetingTypeNotFoundError)
+async def missing_meeting_type(request: Request, exc: MeetingTypeNotFoundError) -> JSONResponse:
+    error = Error(code="meeting_type_not_found", message="Meeting type not found")
+    return JSONResponse(status_code=404, content=error.model_dump(exclude_none=True))
+
+
+app.include_router(slots_router)
