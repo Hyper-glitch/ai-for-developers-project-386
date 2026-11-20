@@ -37,8 +37,83 @@ paths:
                   $ref: '#/components/schemas/MeetingType'
       tags:
         - meeting-types
+    post:
+      operationId: MeetingTypes_create
+      parameters: []
+      responses:
+        '201':
+          description: The request has succeeded and a new resource has been created as a result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeetingType'
+        '422':
+          description: Client error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - meeting-types
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMeetingType'
 components:
   schemas:
+    CreateMeetingType:
+      type: object
+      required:
+        - title
+        - description
+        - durationMinutes
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 1000
+        durationMinutes:
+          type: number
+          enum:
+            - 15
+            - 30
+            - 45
+            - 60
+            - 75
+            - 90
+            - 105
+            - 120
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        reason:
+          type: string
+        fields:
+          type: array
+          items:
+            $ref: '#/components/schemas/FieldError'
+    FieldError:
+      type: object
+      required:
+        - field
+        - message
+      properties:
+        field:
+          type: string
+        message:
+          type: string
     Health:
       type: object
       required:
@@ -53,25 +128,12 @@ components:
       type: object
       required:
         - id
-        - title
-        - description
-        - durationMinutes
       properties:
         id:
           type: string
           format: uuid
-        title:
-          type: string
-          minLength: 1
-          maxLength: 100
-        description:
-          type: string
-          maxLength: 1000
-        durationMinutes:
-          type: integer
-          format: int32
-          minimum: 15
-          maximum: 120
+      allOf:
+        - $ref: '#/components/schemas/CreateMeetingType'
 servers:
   - url: http://localhost:8000
     description: Local development server
