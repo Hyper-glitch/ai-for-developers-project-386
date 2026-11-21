@@ -7,7 +7,7 @@
 Окружение целиком управляется mise (`mise.toml`): версии Python, Node, uv, hk, pitchfork. Глобальные интерпретаторы не используются.
 
 - `mise install` — поставить инструменты; хук `postinstall` запускает `mise run install` (uv sync, npm ci, git-хуки hk).
-- `mise run check` — все проверки: актуальность сгенерированного кода, линтеры, типы, тесты. Эту же команду запускает CI (`.github/workflows/ci.yml`). Должна быть зелёной перед пушем (её же запускает pre-push хук).
+- `mise run check` — все проверки: актуальность сгенерированного кода, линтеры, типы и тесты, включая сквозной сценарий Playwright в Chromium последним шагом. Эту же команду запускает CI (`.github/workflows/ci.yml`). Должна быть зелёной перед пушем (её же запускает pre-push хук).
 - `mise run gen` — пересобрать OpenAPI и клиентов после правки контракта.
 - `mise run lint` / `mise run typecheck` / `mise run test` — по отдельности.
 - `mise daemons start` / `status` / `logs api` / `stop` — бекенд (:8000) и фронтенд (:5173) в фоне.
@@ -17,7 +17,7 @@
 ## Устройство
 
 - `typespec/main.tsp` — контракт API, единственный источник правды. Компилируется в `openapi/openapi.yaml`.
-- Из `openapi/openapi.yaml` генерируются `backend/app/generated/models.py` (Pydantic) и `frontend/src/client/` (SDK hey-api). Сгенерированные файлы коммитятся и руками не правятся; `mise run check` падает, если они расходятся с контрактом.
+- Из `openapi/openapi.yaml` генерируются `backend/app/generated/models.py` (Pydantic) и `frontend/src/client/` (SDK hey-api). Все три результата генерации (OpenAPI, модели и SDK) коммитятся и руками не правятся; `mise run check` падает, если они расходятся с контрактом.
 - `backend/` — FastAPI, uv, ruff, mypy (strict), pytest. Маршруты пишутся вручную по контракту (серверного генератора маршрутов нет), с моделями из `app/generated`; совпадение с контрактом проверяется тестами.
 - `frontend/` — React + Vite + Mantine, oxlint, prettier, vitest. К API обращаться только через `src/api` (настраивает base URL из `VITE_API_URL`).
 
@@ -26,6 +26,7 @@
 - Изменение API: сначала `typespec/main.tsp`, затем `mise run gen`, затем код.
 - TypeScript закреплён на 6.x: `@hey-api/openapi-ts` не работает с TypeScript 7.
 - Коммиты — Conventional Commits (`feat:`, `fix:`, `chore:`, `docs:`, `test:`, `refactor:`, `ci:`; scope по желанию: `feat(backend): ...`). Формат проверяет commit-msg хук hk.
+- В конце заголовка каждого коммита реализации укажите номер тикета, который он закрывает, например `feat: запись на свободный слот (#12)`.
 - Файл `.github/workflows/hexlet-check.yml` не изменять и не удалять.
 
 ## Agent skills
