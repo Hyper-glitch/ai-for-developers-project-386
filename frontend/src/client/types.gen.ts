@@ -4,6 +4,18 @@ export type ClientOptions = {
     baseUrl: 'http://localhost:8000' | (string & {});
 };
 
+export type Booking = CreateBooking & {
+    id: string;
+    endAt: string;
+};
+
+export type CreateBooking = {
+    meetingTypeId: string;
+    startAt: string;
+    guestName: string;
+    guestEmail: string;
+};
+
 export type CreateMeetingType = {
     title: string;
     description: string;
@@ -11,9 +23,9 @@ export type CreateMeetingType = {
 };
 
 export type Error = {
-    code: string;
+    code: 'validation_error' | 'meeting_type_not_found' | 'slot_unavailable' | 'conflict';
     message: string;
-    reason?: string;
+    reason?: 'past' | 'outside_window' | 'off_grid' | 'outside_working_hours';
     fields?: Array<FieldError>;
 };
 
@@ -37,6 +49,39 @@ export type Slot = {
     startAt: string;
     endAt: string;
 };
+
+export type BookingsCreateData = {
+    body: CreateBooking;
+    path?: never;
+    query?: never;
+    url: '/bookings';
+};
+
+export type BookingsCreateErrors = {
+    /**
+     * The server cannot find the requested resource.
+     */
+    404: Error;
+    /**
+     * The request conflicts with the current state of the server.
+     */
+    409: Error;
+    /**
+     * Client error
+     */
+    422: Error;
+};
+
+export type BookingsCreateError = BookingsCreateErrors[keyof BookingsCreateErrors];
+
+export type BookingsCreateResponses = {
+    /**
+     * The request has succeeded and a new resource has been created as a result.
+     */
+    201: Booking;
+};
+
+export type BookingsCreateResponse = BookingsCreateResponses[keyof BookingsCreateResponses];
 
 export type SystemHealthData = {
     body?: never;

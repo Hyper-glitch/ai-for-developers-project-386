@@ -7,7 +7,14 @@ from enum import Enum, StrEnum
 from typing import Annotated
 from uuid import UUID
 
-from pydantic import AwareDatetime, BaseModel, Field
+from pydantic import AwareDatetime, BaseModel, EmailStr, Field
+
+
+class CreateBooking(BaseModel):
+    meetingTypeId: UUID
+    startAt: AwareDatetime
+    guestName: Annotated[str, Field(max_length=100, min_length=1)]
+    guestEmail: EmailStr
 
 
 class DurationMinutes(Enum):
@@ -25,6 +32,20 @@ class CreateMeetingType(BaseModel):
     title: Annotated[str, Field(max_length=100, min_length=1)]
     description: Annotated[str, Field(max_length=1000)]
     durationMinutes: DurationMinutes
+
+
+class Code(StrEnum):
+    validation_error = 'validation_error'
+    meeting_type_not_found = 'meeting_type_not_found'
+    slot_unavailable = 'slot_unavailable'
+    conflict = 'conflict'
+
+
+class Reason(StrEnum):
+    past = 'past'
+    outside_window = 'outside_window'
+    off_grid = 'off_grid'
+    outside_working_hours = 'outside_working_hours'
 
 
 class FieldError(BaseModel):
@@ -49,8 +70,13 @@ class Slot(BaseModel):
     endAt: AwareDatetime
 
 
+class Booking(CreateBooking):
+    id: UUID
+    endAt: AwareDatetime
+
+
 class Error(BaseModel):
-    code: str
+    code: Code
     message: str
-    reason: str | None = None
+    reason: Reason | None = None
     fields: list[FieldError] | None = None

@@ -14,7 +14,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import ConfigDict
 
-from app.generated.models import CreateMeetingType, Error, FieldError, Health, MeetingType, Status
+from app.bookings import router as bookings_router
+from app.generated.models import (
+    Code,
+    CreateMeetingType,
+    Error,
+    FieldError,
+    Health,
+    MeetingType,
+    Status,
+)
 from app.slots import MeetingTypeNotFoundError
 from app.slots import router as slots_router
 from app.store import Store, get_store
@@ -72,14 +81,15 @@ async def validation_error(request: Request, exc: RequestValidationError) -> JSO
         location = issue["loc"]
         name = location[1] if len(location) > 1 and isinstance(location[1], str) else ""
         fields.append(FieldError(field=name, message=issue["msg"]))
-    error = Error(code="validation_error", message="Invalid request", fields=fields)
+    error = Error(code=Code.validation_error, message="Invalid request", fields=fields)
     return JSONResponse(status_code=422, content=error.model_dump(exclude_none=True))
 
 
 @app.exception_handler(MeetingTypeNotFoundError)
 async def missing_meeting_type(request: Request, exc: MeetingTypeNotFoundError) -> JSONResponse:
-    error = Error(code="meeting_type_not_found", message="Meeting type not found")
+    error = Error(code=Code.meeting_type_not_found, message="Meeting type not found")
     return JSONResponse(status_code=404, content=error.model_dump(exclude_none=True))
 
 
 app.include_router(slots_router)
+app.include_router(bookings_router)
