@@ -6,7 +6,60 @@ info:
 tags:
   - name: system
   - name: meeting-types
+  - name: bookings
 paths:
+  /bookings:
+    get:
+      operationId: Bookings_list
+      description: Upcoming and ongoing bookings, ordered by start time.
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Booking'
+      tags:
+        - bookings
+    post:
+      operationId: Bookings_create
+      parameters: []
+      responses:
+        '201':
+          description: The request has succeeded and a new resource has been created as a result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: The request conflicts with the current state of the server.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: Client error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - bookings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBooking'
   /health:
     get:
       operationId: System_health
@@ -37,8 +90,180 @@ paths:
                   $ref: '#/components/schemas/MeetingType'
       tags:
         - meeting-types
+    post:
+      operationId: MeetingTypes_create
+      parameters: []
+      responses:
+        '201':
+          description: The request has succeeded and a new resource has been created as a result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeetingType'
+        '422':
+          description: Client error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - meeting-types
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMeetingType'
+  /meeting-types/{id}:
+    get:
+      operationId: MeetingTypes_get
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeetingType'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - meeting-types
+  /meeting-types/{id}/slots:
+    get:
+      operationId: MeetingTypes_slots
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Slot'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - meeting-types
 components:
   schemas:
+    Booking:
+      type: object
+      required:
+        - id
+        - endAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        endAt:
+          type: string
+          format: date-time
+      allOf:
+        - $ref: '#/components/schemas/CreateBooking'
+    CreateBooking:
+      type: object
+      required:
+        - meetingTypeId
+        - startAt
+        - guestName
+        - guestEmail
+      properties:
+        meetingTypeId:
+          type: string
+          format: uuid
+        startAt:
+          type: string
+          format: date-time
+        guestName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        guestEmail:
+          type: string
+          format: email
+    CreateMeetingType:
+      type: object
+      required:
+        - title
+        - description
+        - durationMinutes
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 1000
+        durationMinutes:
+          type: number
+          enum:
+            - 15
+            - 30
+            - 45
+            - 60
+            - 75
+            - 90
+            - 105
+            - 120
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          enum:
+            - validation_error
+            - meeting_type_not_found
+            - slot_unavailable
+            - conflict
+        message:
+          type: string
+        reason:
+          type: string
+          enum:
+            - past
+            - outside_window
+            - off_grid
+            - outside_working_hours
+        fields:
+          type: array
+          items:
+            $ref: '#/components/schemas/FieldError'
+    FieldError:
+      type: object
+      required:
+        - field
+        - message
+      properties:
+        field:
+          type: string
+        message:
+          type: string
     Health:
       type: object
       required:
@@ -53,25 +278,24 @@ components:
       type: object
       required:
         - id
-        - title
-        - description
-        - durationMinutes
       properties:
         id:
           type: string
           format: uuid
-        title:
+      allOf:
+        - $ref: '#/components/schemas/CreateMeetingType'
+    Slot:
+      type: object
+      required:
+        - startAt
+        - endAt
+      properties:
+        startAt:
           type: string
-          minLength: 1
-          maxLength: 100
-        description:
+          format: date-time
+        endAt:
           type: string
-          maxLength: 1000
-        durationMinutes:
-          type: integer
-          format: int32
-          minimum: 15
-          maximum: 120
+          format: date-time
 servers:
   - url: http://localhost:8000
     description: Local development server

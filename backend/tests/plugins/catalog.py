@@ -1,12 +1,14 @@
 """Isolated catalog and example meeting types for HTTP tests."""
 
 from collections.abc import Iterator
-from uuid import UUID
+from datetime import datetime
 
 import pytest
+from fastapi.testclient import TestClient
 
 from app.generated.models import MeetingType
 from app.main import app
+from app.schedule import get_now
 from app.store import Store, get_store
 
 
@@ -22,11 +24,26 @@ def store() -> Iterator[Store]:
 
 
 @pytest.fixture
-def published_types(store: Store) -> list[MeetingType]:
-    """Publish two types in a different order from title and ID sorting."""
-    types = [
-        MeetingType(id=UUID(int=2), title="Review", description="Feedback", durationMinutes=45),
-        MeetingType(id=UUID(int=1), title="Intro", description="", durationMinutes=15),
-    ]
-    store.meeting_types.update((item.id, item) for item in types)
+def published_types(client: TestClient) -> list[MeetingType]:
+    """Publish duplicate titles through the same endpoint as the owner."""
+    types = []
+    for duration in (45, 15):
+        response = client.post(
+            "/meeting-types",
+            json={"title": "Intro", "description": "", "durationMinutes": duration},
+        )
+        assert response.status_code == 201
+        types.append(MeetingType.model_validate(response.json()))
+    assert types[0].id != types[1].id
     return types
+
+
+@pytest.fixture(autouse=True)
+def now() -> Iterator[datetime]:
+    """Freeze Tuesday noon in Moscow for availability and booking requests."""
+    instant = datetime.fromisoformat("2026-11-03T09:00:00Z")
+    app.dependency_overrides[get_now] = lambda: instant
+    try:
+        yield instant
+    finally:
+        del app.dependency_overrides[get_now]

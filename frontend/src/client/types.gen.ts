@@ -4,6 +4,36 @@ export type ClientOptions = {
     baseUrl: 'http://localhost:8000' | (string & {});
 };
 
+export type Booking = CreateBooking & {
+    id: string;
+    endAt: string;
+};
+
+export type CreateBooking = {
+    meetingTypeId: string;
+    startAt: string;
+    guestName: string;
+    guestEmail: string;
+};
+
+export type CreateMeetingType = {
+    title: string;
+    description: string;
+    durationMinutes: 15 | 30 | 45 | 60 | 75 | 90 | 105 | 120;
+};
+
+export type Error = {
+    code: 'validation_error' | 'meeting_type_not_found' | 'slot_unavailable' | 'conflict';
+    message: string;
+    reason?: 'past' | 'outside_window' | 'off_grid' | 'outside_working_hours';
+    fields?: Array<FieldError>;
+};
+
+export type FieldError = {
+    field: string;
+    message: string;
+};
+
 /**
  * Liveness response.
  */
@@ -11,12 +41,63 @@ export type Health = {
     status: 'ok';
 };
 
-export type MeetingType = {
+export type MeetingType = CreateMeetingType & {
     id: string;
-    title: string;
-    description: string;
-    durationMinutes: number;
 };
+
+export type Slot = {
+    startAt: string;
+    endAt: string;
+};
+
+export type BookingsListData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/bookings';
+};
+
+export type BookingsListResponses = {
+    /**
+     * The request has succeeded.
+     */
+    200: Array<Booking>;
+};
+
+export type BookingsListResponse = BookingsListResponses[keyof BookingsListResponses];
+
+export type BookingsCreateData = {
+    body: CreateBooking;
+    path?: never;
+    query?: never;
+    url: '/bookings';
+};
+
+export type BookingsCreateErrors = {
+    /**
+     * The server cannot find the requested resource.
+     */
+    404: Error;
+    /**
+     * The request conflicts with the current state of the server.
+     */
+    409: Error;
+    /**
+     * Client error
+     */
+    422: Error;
+};
+
+export type BookingsCreateError = BookingsCreateErrors[keyof BookingsCreateErrors];
+
+export type BookingsCreateResponses = {
+    /**
+     * The request has succeeded and a new resource has been created as a result.
+     */
+    201: Booking;
+};
+
+export type BookingsCreateResponse = BookingsCreateResponses[keyof BookingsCreateResponses];
 
 export type SystemHealthData = {
     body?: never;
@@ -49,3 +130,82 @@ export type MeetingTypesListResponses = {
 };
 
 export type MeetingTypesListResponse = MeetingTypesListResponses[keyof MeetingTypesListResponses];
+
+export type MeetingTypesCreateData = {
+    body: CreateMeetingType;
+    path?: never;
+    query?: never;
+    url: '/meeting-types';
+};
+
+export type MeetingTypesCreateErrors = {
+    /**
+     * Client error
+     */
+    422: Error;
+};
+
+export type MeetingTypesCreateError = MeetingTypesCreateErrors[keyof MeetingTypesCreateErrors];
+
+export type MeetingTypesCreateResponses = {
+    /**
+     * The request has succeeded and a new resource has been created as a result.
+     */
+    201: MeetingType;
+};
+
+export type MeetingTypesCreateResponse = MeetingTypesCreateResponses[keyof MeetingTypesCreateResponses];
+
+export type MeetingTypesGetData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/meeting-types/{id}';
+};
+
+export type MeetingTypesGetErrors = {
+    /**
+     * The server cannot find the requested resource.
+     */
+    404: Error;
+};
+
+export type MeetingTypesGetError = MeetingTypesGetErrors[keyof MeetingTypesGetErrors];
+
+export type MeetingTypesGetResponses = {
+    /**
+     * The request has succeeded.
+     */
+    200: MeetingType;
+};
+
+export type MeetingTypesGetResponse = MeetingTypesGetResponses[keyof MeetingTypesGetResponses];
+
+export type MeetingTypesSlotsData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/meeting-types/{id}/slots';
+};
+
+export type MeetingTypesSlotsErrors = {
+    /**
+     * The server cannot find the requested resource.
+     */
+    404: Error;
+};
+
+export type MeetingTypesSlotsError = MeetingTypesSlotsErrors[keyof MeetingTypesSlotsErrors];
+
+export type MeetingTypesSlotsResponses = {
+    /**
+     * The request has succeeded.
+     */
+    200: Array<Slot>;
+};
+
+export type MeetingTypesSlotsResponse = MeetingTypesSlotsResponses[keyof MeetingTypesSlotsResponses];

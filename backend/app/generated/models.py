@@ -3,11 +3,54 @@
 
 from __future__ import annotations
 
-from enum import StrEnum
+from enum import Enum, StrEnum
 from typing import Annotated
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import AwareDatetime, BaseModel, EmailStr, Field
+
+
+class CreateBooking(BaseModel):
+    meetingTypeId: UUID
+    startAt: AwareDatetime
+    guestName: Annotated[str, Field(max_length=100, min_length=1)]
+    guestEmail: EmailStr
+
+
+class DurationMinutes(Enum):
+    number_15 = 15
+    number_30 = 30
+    number_45 = 45
+    number_60 = 60
+    number_75 = 75
+    number_90 = 90
+    number_105 = 105
+    number_120 = 120
+
+
+class CreateMeetingType(BaseModel):
+    title: Annotated[str, Field(max_length=100, min_length=1)]
+    description: Annotated[str, Field(max_length=1000)]
+    durationMinutes: DurationMinutes
+
+
+class Code(StrEnum):
+    validation_error = 'validation_error'
+    meeting_type_not_found = 'meeting_type_not_found'
+    slot_unavailable = 'slot_unavailable'
+    conflict = 'conflict'
+
+
+class Reason(StrEnum):
+    past = 'past'
+    outside_window = 'outside_window'
+    off_grid = 'off_grid'
+    outside_working_hours = 'outside_working_hours'
+
+
+class FieldError(BaseModel):
+    field: str
+    message: str
 
 
 class Status(StrEnum):
@@ -18,8 +61,22 @@ class Health(BaseModel):
     status: Status
 
 
-class MeetingType(BaseModel):
+class MeetingType(CreateMeetingType):
     id: UUID
-    title: Annotated[str, Field(max_length=100, min_length=1)]
-    description: Annotated[str, Field(max_length=1000)]
-    durationMinutes: Annotated[int, Field(ge=15, le=120)]
+
+
+class Slot(BaseModel):
+    startAt: AwareDatetime
+    endAt: AwareDatetime
+
+
+class Booking(CreateBooking):
+    id: UUID
+    endAt: AwareDatetime
+
+
+class Error(BaseModel):
+    code: Code
+    message: str
+    reason: Reason | None = None
+    fields: list[FieldError] | None = None
