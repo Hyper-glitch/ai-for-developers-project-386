@@ -4,8 +4,10 @@
 from __future__ import annotations
 
 from enum import StrEnum
+from typing import Annotated
+from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class Status(StrEnum):
@@ -14,3 +16,10 @@ class Status(StrEnum):
 
 class Health(BaseModel):
     status: Status
+
+
+class MeetingType(BaseModel):
+    id: UUID
+    title: Annotated[str, Field(max_length=100, min_length=1)]
+    description: Annotated[str, Field(max_length=1000)]
+    durationMinutes: Annotated[int, Field(ge=15, le=120)]

@@ -18,3 +18,17 @@ interface System {
   /** Report that the service is up. */
   @get op health(): Health;
 }
+
+model MeetingType {
+  @format("uuid") id: string;
+  @minLength(1) @maxLength(100) title: string;
+  @maxLength(1000) description: string;
+  @minValue(15) @maxValue(120) durationMinutes: int32;
+}
+
+@route("/meeting-types")
+@tag("meeting-types")
+interface MeetingTypes {
+  /** List the owner's meeting types in creation order. */
+  @get op list(): MeetingType[];
+}

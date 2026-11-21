@@ -1,7 +1,9 @@
 import { screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { renderAt } from './test/render';
+
+vi.mock('./api', () => ({ listMeetingTypes: vi.fn().mockResolvedValue([]) }));
 
 function expectHomePage() {
   expect(screen.getByRole('heading', { level: 1, name: 'Запись на звонок' })).toBeInTheDocument();

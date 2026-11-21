@@ -13,3 +13,6 @@ def client() -> Iterator[TestClient]:
     """HTTP client bound to the app; the context manager runs startup and shutdown."""
     with TestClient(app) as test_client:
         yield test_client
+
+
+pytest_plugins = ["tests.plugins.catalog"]

@@ -11,6 +11,13 @@ export type Health = {
     status: 'ok';
 };
 
+export type MeetingType = {
+    id: string;
+    title: string;
+    description: string;
+    durationMinutes: number;
+};
+
 export type SystemHealthData = {
     body?: never;
     path?: never;
@@ -26,3 +33,19 @@ export type SystemHealthResponses = {
 };
 
 export type SystemHealthResponse = SystemHealthResponses[keyof SystemHealthResponses];
+
+export type MeetingTypesListData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/meeting-types';
+};
+
+export type MeetingTypesListResponses = {
+    /**
+     * The request has succeeded.
+     */
+    200: Array<MeetingType>;
+};
+
+export type MeetingTypesListResponse = MeetingTypesListResponses[keyof MeetingTypesListResponses];

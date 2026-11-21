@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { SystemHealthData, SystemHealthResponses } from './types.gen';
+import type { MeetingTypesListData, MeetingTypesListResponses, SystemHealthData, SystemHealthResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -22,3 +22,8 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
  * Report that the service is up.
  */
 export const systemHealth = <ThrowOnError extends boolean = false>(options?: Options<SystemHealthData, ThrowOnError>): RequestResult<SystemHealthResponses, unknown, ThrowOnError> => (options?.client ?? client).get<SystemHealthResponses, unknown, ThrowOnError>({ url: '/health', ...options });
+
+/**
+ * List the owner's meeting types in creation order.
+ */
+export const meetingTypesList = <ThrowOnError extends boolean = false>(options?: Options<MeetingTypesListData, ThrowOnError>): RequestResult<MeetingTypesListResponses, unknown, ThrowOnError> => (options?.client ?? client).get<MeetingTypesListResponses, unknown, ThrowOnError>({ url: '/meeting-types', ...options });
