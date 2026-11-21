@@ -27,12 +27,14 @@ from app.schedule import unavailable_reason
     ],
 )
 def test_schedule_boundary(start: str, minutes: int, reason: str | None) -> None:
+    """Starts must fit the booking window, the workday and the time grid."""
     now = datetime.fromisoformat("2026-11-03T06:00:00Z")
 
     assert unavailable_reason(datetime.fromisoformat(start), minutes, now) == reason
 
 
 def test_window_uses_moscow_today() -> None:
+    """After Moscow midnight the final bookable day advances before UTC midnight."""
     now = datetime.fromisoformat("2026-11-02T22:00:00Z")
     last_morning = datetime.fromisoformat("2026-11-16T06:00:00Z")
 

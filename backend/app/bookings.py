@@ -42,6 +42,7 @@ def create_booking(
     store: Annotated[Store, Depends(get_store)],
     now: Annotated[datetime, Depends(get_now)],
 ) -> Booking | JSONResponse:
+    """Reserve the published duration on the owner's shared schedule."""
     try:
         item = store.meeting_types[body.meetingTypeId]
     except KeyError as exc:

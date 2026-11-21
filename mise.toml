@@ -131,7 +131,7 @@ dir = "e2e"
 run = "npm test"
 
 [tasks.test]
-description = "Run all tests"
+description = "Run backend and frontend tests"
 depends = ["test:backend", "test:frontend"]
 
 [tasks."gen:verify"]
