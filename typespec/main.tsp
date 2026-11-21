@@ -85,6 +85,9 @@ model Booking extends CreateBooking {
 @route("/bookings")
 @tag("bookings")
 interface Bookings {
+  /** Upcoming and ongoing bookings, ordered by start time. */
+  @get op list(): Booking[];
+
   @post op create(@body input: CreateBooking): {
     @statusCode status: 201;
     @body result: Booking;

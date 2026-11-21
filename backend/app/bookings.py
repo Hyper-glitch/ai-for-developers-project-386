@@ -60,3 +60,15 @@ def create_booking(
         error = Error(code=Code.conflict, message="Slot already booked")
         return JSONResponse(status_code=409, content=error.model_dump(exclude_none=True))
     return booking
+
+
+@router.get("/bookings", operation_id="Bookings_list")
+def list_bookings(
+    store: Annotated[Store, Depends(get_store)],
+    now: Annotated[datetime, Depends(get_now)],
+) -> list[Booking]:
+    """Include ongoing meetings until the instant they end."""
+    return sorted(
+        (booking for booking in store.bookings() if booking.endAt > now),
+        key=lambda booking: booking.startAt,
+    )

@@ -9,6 +9,21 @@ tags:
   - name: bookings
 paths:
   /bookings:
+    get:
+      operationId: Bookings_list
+      description: Upcoming and ongoing bookings, ordered by start time.
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Booking'
+      tags:
+        - bookings
     post:
       operationId: Bookings_create
       parameters: []

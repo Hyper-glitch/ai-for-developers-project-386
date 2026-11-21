@@ -41,9 +41,16 @@ run = "npm ci"
 description = "Install git hooks managed by hk"
 run = "hk install --mise"
 
+[tasks."install:e2e"]
+dir = "e2e"
+run = [
+  "npm ci",
+  'if [ -n "$CI" ]; then npx playwright install --with-deps chromium; else npx playwright install chromium; fi',
+]
+
 [tasks.install]
 description = "Install all dependencies and git hooks"
-depends = ["install:backend", "install:frontend", "install:typespec", "install:hooks"]
+depends = ["install:backend", "install:frontend", "install:typespec", "install:hooks", "install:e2e"]
 
 # --- code generation: TypeSpec -> OpenAPI -> clients ---
 
@@ -119,6 +126,10 @@ run = "uv run pytest"
 dir = "frontend"
 run = "npm test"
 
+[tasks."test:e2e"]
+dir = "e2e"
+run = "npm test"
+
 [tasks.test]
 description = "Run all tests"
 depends = ["test:backend", "test:frontend"]
@@ -132,7 +143,7 @@ run = "git diff --exit-code -- openapi frontend/src/client backend/app/generated
 description = "Run every check: generated code, linters, type checks, tests"
 # Generation runs first: it rewrites files that linters and tests read.
 depends = ["gen:verify"]
-run = [{ task = "lint" }, { task = "typecheck" }, { task = "test" }]
+run = [{ task = "lint" }, { task = "typecheck" }, { task = "test" }, { task = "test:e2e" }]
 
 # --- background dev servers ---
 

@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { BookingsCreateData, BookingsCreateErrors, BookingsCreateResponses, MeetingTypesCreateData, MeetingTypesCreateErrors, MeetingTypesCreateResponses, MeetingTypesGetData, MeetingTypesGetErrors, MeetingTypesGetResponses, MeetingTypesListData, MeetingTypesListResponses, MeetingTypesSlotsData, MeetingTypesSlotsErrors, MeetingTypesSlotsResponses, SystemHealthData, SystemHealthResponses } from './types.gen';
+import type { BookingsCreateData, BookingsCreateErrors, BookingsCreateResponses, BookingsListData, BookingsListResponses, MeetingTypesCreateData, MeetingTypesCreateErrors, MeetingTypesCreateResponses, MeetingTypesGetData, MeetingTypesGetErrors, MeetingTypesGetResponses, MeetingTypesListData, MeetingTypesListResponses, MeetingTypesSlotsData, MeetingTypesSlotsErrors, MeetingTypesSlotsResponses, SystemHealthData, SystemHealthResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -17,6 +17,11 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
      */
     meta?: keyof ClientMeta extends never ? Record<string, unknown> : ClientMeta;
 };
+
+/**
+ * Upcoming and ongoing bookings, ordered by start time.
+ */
+export const bookingsList = <ThrowOnError extends boolean = false>(options?: Options<BookingsListData, ThrowOnError>): RequestResult<BookingsListResponses, unknown, ThrowOnError> => (options?.client ?? client).get<BookingsListResponses, unknown, ThrowOnError>({ url: '/bookings', ...options });
 
 export const bookingsCreate = <ThrowOnError extends boolean = false>(options: Options<BookingsCreateData, ThrowOnError>): RequestResult<BookingsCreateResponses, BookingsCreateErrors, ThrowOnError> => (options.client ?? client).post<BookingsCreateResponses, BookingsCreateErrors, ThrowOnError>({
     url: '/bookings',
