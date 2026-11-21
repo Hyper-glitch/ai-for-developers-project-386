@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { MeetingTypesListData, MeetingTypesListResponses, SystemHealthData, SystemHealthResponses } from './types.gen';
+import type { MeetingTypesCreateData, MeetingTypesCreateErrors, MeetingTypesCreateResponses, MeetingTypesListData, MeetingTypesListResponses, SystemHealthData, SystemHealthResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -27,3 +27,12 @@ export const systemHealth = <ThrowOnError extends boolean = false>(options?: Opt
  * List the owner's meeting types in creation order.
  */
 export const meetingTypesList = <ThrowOnError extends boolean = false>(options?: Options<MeetingTypesListData, ThrowOnError>): RequestResult<MeetingTypesListResponses, unknown, ThrowOnError> => (options?.client ?? client).get<MeetingTypesListResponses, unknown, ThrowOnError>({ url: '/meeting-types', ...options });
+
+export const meetingTypesCreate = <ThrowOnError extends boolean = false>(options: Options<MeetingTypesCreateData, ThrowOnError>): RequestResult<MeetingTypesCreateResponses, MeetingTypesCreateErrors, ThrowOnError> => (options.client ?? client).post<MeetingTypesCreateResponses, MeetingTypesCreateErrors, ThrowOnError>({
+    url: '/meeting-types',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});

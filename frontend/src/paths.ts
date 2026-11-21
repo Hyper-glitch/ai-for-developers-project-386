@@ -2,5 +2,6 @@
 export const paths = {
   home: '/',
   catalog: '/book',
+  ownerMeetingTypes: '/owner/meeting-types',
   meetingType: (id: string) => `/book/${id}`,
 } as const;

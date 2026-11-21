@@ -19,11 +19,26 @@ interface System {
   @get op health(): Health;
 }
 
-model MeetingType {
-  @format("uuid") id: string;
+model CreateMeetingType {
   @minLength(1) @maxLength(100) title: string;
   @maxLength(1000) description: string;
-  @minValue(15) @maxValue(120) durationMinutes: int32;
+  durationMinutes: 15 | 30 | 45 | 60 | 75 | 90 | 105 | 120;
+}
+
+model MeetingType extends CreateMeetingType {
+  @format("uuid") id: string;
+}
+
+model FieldError {
+  field: string;
+  message: string;
+}
+
+model Error {
+  code: string;
+  message: string;
+  reason?: string;
+  fields?: FieldError[];
 }
 
 @route("/meeting-types")
@@ -31,4 +46,12 @@ model MeetingType {
 interface MeetingTypes {
   /** List the owner's meeting types in creation order. */
   @get op list(): MeetingType[];
+
+  @post op create(@body input: CreateMeetingType): {
+    @statusCode status: 201;
+    @body result: MeetingType;
+  } | {
+    @statusCode status: 422;
+    @body error: Error;
+  };
 }

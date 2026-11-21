@@ -1,9 +1,9 @@
 """Isolated catalog and example meeting types for HTTP tests."""
 
 from collections.abc import Iterator
-from uuid import UUID
 
 import pytest
+from fastapi.testclient import TestClient
 
 from app.generated.models import MeetingType
 from app.main import app
@@ -22,11 +22,15 @@ def store() -> Iterator[Store]:
 
 
 @pytest.fixture
-def published_types(store: Store) -> list[MeetingType]:
-    """Publish two types in a different order from title and ID sorting."""
-    types = [
-        MeetingType(id=UUID(int=2), title="Review", description="Feedback", durationMinutes=45),
-        MeetingType(id=UUID(int=1), title="Intro", description="", durationMinutes=15),
-    ]
-    store.meeting_types.update((item.id, item) for item in types)
+def published_types(client: TestClient) -> list[MeetingType]:
+    """Publish duplicate titles through the same endpoint as the owner."""
+    types = []
+    for duration in (45, 15):
+        response = client.post(
+            "/meeting-types",
+            json={"title": "Intro", "description": "", "durationMinutes": duration},
+        )
+        assert response.status_code == 201
+        types.append(MeetingType.model_validate(response.json()))
+    assert types[0].id != types[1].id
     return types

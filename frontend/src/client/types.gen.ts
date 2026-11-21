@@ -4,6 +4,24 @@ export type ClientOptions = {
     baseUrl: 'http://localhost:8000' | (string & {});
 };
 
+export type CreateMeetingType = {
+    title: string;
+    description: string;
+    durationMinutes: 15 | 30 | 45 | 60 | 75 | 90 | 105 | 120;
+};
+
+export type Error = {
+    code: string;
+    message: string;
+    reason?: string;
+    fields?: Array<FieldError>;
+};
+
+export type FieldError = {
+    field: string;
+    message: string;
+};
+
 /**
  * Liveness response.
  */
@@ -11,11 +29,8 @@ export type Health = {
     status: 'ok';
 };
 
-export type MeetingType = {
+export type MeetingType = CreateMeetingType & {
     id: string;
-    title: string;
-    description: string;
-    durationMinutes: number;
 };
 
 export type SystemHealthData = {
@@ -49,3 +64,28 @@ export type MeetingTypesListResponses = {
 };
 
 export type MeetingTypesListResponse = MeetingTypesListResponses[keyof MeetingTypesListResponses];
+
+export type MeetingTypesCreateData = {
+    body: CreateMeetingType;
+    path?: never;
+    query?: never;
+    url: '/meeting-types';
+};
+
+export type MeetingTypesCreateErrors = {
+    /**
+     * Client error
+     */
+    422: Error;
+};
+
+export type MeetingTypesCreateError = MeetingTypesCreateErrors[keyof MeetingTypesCreateErrors];
+
+export type MeetingTypesCreateResponses = {
+    /**
+     * The request has succeeded and a new resource has been created as a result.
+     */
+    201: MeetingType;
+};
+
+export type MeetingTypesCreateResponse = MeetingTypesCreateResponses[keyof MeetingTypesCreateResponses];

@@ -4,6 +4,7 @@ import { Link, Outlet, Route, Routes } from 'react-router';
 import { CatalogPage } from './pages/CatalogPage';
 import { HomePage } from './pages/HomePage';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { OwnerMeetingTypesPage } from './pages/OwnerMeetingTypesPage';
 import { paths } from './paths';
 
 function Layout() {
@@ -33,6 +34,7 @@ export default function App() {
       <Route element={<Layout />}>
         <Route index element={<HomePage />} />
         <Route path={paths.catalog} element={<CatalogPage />} />
+        <Route path={paths.ownerMeetingTypes} element={<OwnerMeetingTypesPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
