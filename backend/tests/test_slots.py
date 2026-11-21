@@ -8,6 +8,7 @@ from app.generated.models import Error, MeetingType, Slot
 
 
 def test_guest_reads_published_type(client: TestClient, published_types: list[MeetingType]) -> None:
+    """A guest following a direct link sees the type the owner published."""
     meeting_type = published_types[0]
 
     response = client.get(f"/meeting-types/{meeting_type.id}")
@@ -19,6 +20,7 @@ def test_guest_reads_published_type(client: TestClient, published_types: list[Me
 @pytest.mark.parametrize("suffix", ["", "/slots"])
 @pytest.mark.parametrize("identifier", ["not-a-uuid", "00000000-0000-0000-0000-000000000000"])
 def test_missing_type_returns_error(client: TestClient, identifier: str, suffix: str) -> None:
+    """Guests get the same error for malformed links and unpublished types."""
     response = client.get(f"/meeting-types/{identifier}{suffix}")
 
     assert response.status_code == 404
@@ -26,6 +28,7 @@ def test_missing_type_returns_error(client: TestClient, identifier: str, suffix:
 
 
 def test_slots_cover_booking_window(client: TestClient, published_types: list[MeetingType]) -> None:
+    """Guests see the remaining starts in chronological order for fourteen days."""
     response = client.get(f"/meeting-types/{published_types[0].id}/slots")
 
     assert response.status_code == 200

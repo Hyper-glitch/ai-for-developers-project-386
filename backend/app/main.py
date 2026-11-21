@@ -10,10 +10,13 @@ from typing import Annotated
 from uuid import uuid4
 
 from fastapi import Depends, FastAPI, Request
+from fastapi.exception_handlers import http_exception_handler
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import ConfigDict
+from starlette.exceptions import HTTPException
+from starlette.responses import Response
 
 from app.bookings import router as bookings_router
 from app.generated.models import (
@@ -87,12 +90,25 @@ async def validation_error(request: Request, exc: RequestValidationError) -> JSO
         location = issue["loc"]
         name = location[1] if len(location) > 1 and isinstance(location[1], str) else ""
         fields.append(FieldError(field=name, message=issue["msg"]))
+    return _invalid_request(fields)
+
+
+@app.exception_handler(HTTPException)
+async def http_error(request: Request, exc: HTTPException) -> Response:
+    """Report undecodable JSON as a body-level validation error."""
+    if exc.status_code == 400 and isinstance(exc.__cause__, UnicodeDecodeError):
+        return _invalid_request([FieldError(field="", message="Invalid JSON encoding")])
+    return await http_exception_handler(request, exc)
+
+
+def _invalid_request(fields: list[FieldError]) -> JSONResponse:
     error = Error(code=Code.validation_error, message="Invalid request", fields=fields)
     return JSONResponse(status_code=422, content=error.model_dump(exclude_none=True))
 
 
 @app.exception_handler(MeetingTypeNotFoundError)
 async def missing_meeting_type(request: Request, exc: MeetingTypeNotFoundError) -> JSONResponse:
+    """Give guests the same recovery path for an invalid or unpublished link."""
     error = Error(code=Code.meeting_type_not_found, message="Meeting type not found")
     return JSONResponse(status_code=404, content=error.model_dump(exclude_none=True))
 

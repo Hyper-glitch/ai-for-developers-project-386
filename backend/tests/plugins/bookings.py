@@ -12,6 +12,7 @@ from app.schedule import get_now
 
 @pytest.fixture
 def booking_request(published_types: list[MeetingType]) -> dict[str, str]:
+    """Use the longer type and guest-entered contacts with surrounding spaces."""
     return {
         "meetingTypeId": str(published_types[0].id),
         "startAt": "2026-11-03T13:00:00+03:00",
@@ -47,3 +48,19 @@ def upcoming(
     instant = datetime.fromisoformat(f"2026-11-03T{request.param}:00Z")
     app.dependency_overrides[get_now] = lambda: instant
     return [bookings[2], bookings[0]]
+
+
+@pytest.fixture
+def reserved_slot(client: TestClient, booking_request: dict[str, str]) -> Booking:
+    """Occupy 10:00 to 10:45 UTC on the owner's shared schedule."""
+    response = client.post("/bookings", json=booking_request)
+    assert response.status_code == 201
+    return Booking.model_validate(response.json())
+
+
+@pytest.fixture
+def ongoing_request(reserved_slot: Booking, booking_request: dict[str, str]) -> dict[str, str]:
+    """Move into the booked interval while its remaining time is still occupied."""
+    instant = datetime.fromisoformat("2026-11-03T10:05:00Z")
+    app.dependency_overrides[get_now] = lambda: instant
+    return booking_request

@@ -1,19 +1,17 @@
 """Guest booking through the public HTTP contract."""
 
 from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime
 from threading import Barrier
 
 import pytest
 from fastapi.testclient import TestClient
 
 from app.generated.models import Booking, Error, MeetingType, Slot
-from app.main import app
-from app.schedule import get_now
 from app.store import Store
 
 
 def test_booking_computes_utc_end(client: TestClient, booking_request: dict[str, str]) -> None:
+    """Guests receive normalized contacts and the end time set by the owner."""
     response = client.post("/bookings", json=booking_request | {"endAt": "2000-01-01T00:00:00Z"})
     assert response.status_code == 201
     result = Booking.model_validate(response.json())
@@ -36,6 +34,7 @@ def test_booking_computes_utc_end(client: TestClient, booking_request: dict[str,
 def test_unavailable_returns_first_reason(
     client: TestClient, booking_request: dict[str, str], start: str, reason: str
 ) -> None:
+    """Guests receive the first applicable scheduling error for a start."""
     response = client.post("/bookings", json=booking_request | {"startAt": start})
     error = Error.model_validate(response.json())
     assert (response.status_code, error.code, error.reason) == (422, "slot_unavailable", reason)
@@ -45,6 +44,7 @@ def test_unavailable_returns_first_reason(
 def test_validation_precedes_type_lookup(
     client: TestClient, booking_request: dict[str, str], start: str | int
 ) -> None:
+    """Each invalid field gets feedback before the request reaches scheduling."""
     response = client.post(
         "/bookings",
         json=booking_request
@@ -63,6 +63,7 @@ def test_validation_precedes_type_lookup(
 def test_missing_type_precedes_schedule(
     client: TestClient, booking_request: dict[str, str]
 ) -> None:
+    """A stale meeting link takes priority over a stale start time."""
     response = client.post(
         "/bookings",
         json=booking_request
@@ -80,6 +81,7 @@ def test_missing_type_precedes_schedule(
 def test_concurrent_requests_choose_one_guest(
     client: TestClient, booking_request: dict[str, str]
 ) -> None:
+    """Only one guest receives confirmation when several claim the same slot."""
     barrier = Barrier(8)
 
     def submit(guest: int) -> tuple[int, str]:
@@ -95,25 +97,37 @@ def test_concurrent_requests_choose_one_guest(
     assert outcomes.count((409, "conflict")) == 7
 
 
-def test_overlap_across_meeting_types(
-    client: TestClient, booking_request: dict[str, str], published_types: list[MeetingType]
+def test_slots_respect_other_types(
+    client: TestClient, reserved_slot: Booking, published_types: list[MeetingType]
 ) -> None:
-    assert client.post("/bookings", json=booking_request).status_code == 201
-    other = str(published_types[1].id)
-    slots = client.get(f"/meeting-types/{other}/slots")
-    starts = {Slot.model_validate(row).startAt.isoformat() for row in slots.json()}
+    """A booking hides overlapping starts and leaves both adjacent slots free."""
+    response = client.get(f"/meeting-types/{published_types[1].id}/slots")
+    starts = {Slot.model_validate(row).startAt.isoformat() for row in response.json()}
     assert "2026-11-03T10:15:00+00:00" not in starts
     assert "2026-11-03T09:45:00+00:00" in starts
     assert "2026-11-03T10:45:00+00:00" in starts
-    for start, expected in [("10:15", 409), ("09:45", 201), ("10:45", 201)]:
-        response = client.post(
-            "/bookings",
-            json=booking_request | {"meetingTypeId": other, "startAt": f"2026-11-03T{start}:00Z"},
-        )
-        assert response.status_code == expected
+
+
+@pytest.mark.parametrize(("start", "status"), [("10:15", 409), ("09:45", 201), ("10:45", 201)])
+def test_bookings_respect_other_types(
+    client: TestClient,
+    reserved_slot: Booking,
+    published_types: list[MeetingType],
+    booking_request: dict[str, str],
+    start: str,
+    status: int,
+) -> None:
+    """Switching meeting types still requires a free interval."""
+    response = client.post(
+        "/bookings",
+        json=booking_request
+        | {"meetingTypeId": str(published_types[1].id), "startAt": f"2026-11-03T{start}:00Z"},
+    )
+    assert response.status_code == status
 
 
 def test_store_accepts_one_contender(store: Store, booking_request: dict[str, str]) -> None:
+    """Concurrent writes cannot reserve the same interval twice."""
     booking = Booking.model_validate(
         booking_request
         | {"id": "00000000-0000-0000-0000-000000000001", "endAt": "2026-11-03T10:45:00Z"}
@@ -132,18 +146,23 @@ def test_store_accepts_one_contender(store: Store, booking_request: dict[str, st
 
 @pytest.mark.parametrize("raw", ["{", "[]", '"invalid"'])
 def test_bad_body_has_unnamed_field(client: TestClient, raw: str) -> None:
+    """A malformed payload reports a body-level error without blaming a field."""
     response = client.post("/bookings", content=raw, headers={"content-type": "application/json"})
     error = Error.model_validate(response.json())
     assert (response.status_code, error.code) == (422, "validation_error")
     assert error.fields and [item.field for item in error.fields] == [""]
 
 
-def test_past_precedes_occupied_slot(client: TestClient, booking_request: dict[str, str]) -> None:
-    response = client.post("/bookings", json=booking_request)
-    assert response.status_code == 201
-    app.dependency_overrides[get_now] = lambda: datetime.fromisoformat("2026-11-03T10:05:00Z")
-    response = client.post("/bookings", json=booking_request)
+def test_past_precedes_occupied_slot(client: TestClient, ongoing_request: dict[str, str]) -> None:
+    """An elapsed start takes priority over an occupancy conflict."""
+    response = client.post("/bookings", json=ongoing_request)
     error = Error.model_validate(response.json())
     assert (response.status_code, error.code, error.reason) == (422, "slot_unavailable", "past")
-    response = client.post("/bookings", json=booking_request | {"startAt": "2026-11-03T10:15:00Z"})
+
+
+def test_ongoing_meeting_blocks_overlap(
+    client: TestClient, ongoing_request: dict[str, str]
+) -> None:
+    """Guests cannot book the remaining time of a meeting already underway."""
+    response = client.post("/bookings", json=ongoing_request | {"startAt": "2026-11-03T10:15:00Z"})
     assert (response.status_code, Error.model_validate(response.json()).code) == (409, "conflict")

@@ -29,6 +29,7 @@ class MeetingTypeNotFoundError(Exception):
 
 
 def find_meeting_type(request: Request, store: Annotated[Store, Depends(get_store)]) -> MeetingType:
+    """Treat malformed IDs and unpublished IDs as unavailable links."""
     try:
         return store.meeting_types[UUID(request.path_params["id"])]
     except (ValueError, KeyError) as exc:
@@ -37,6 +38,7 @@ def find_meeting_type(request: Request, store: Annotated[Store, Depends(get_stor
 
 @router.get("/meeting-types/{id}", operation_id="MeetingTypes_get", openapi_extra=path_schema)
 def get_meeting_type(item: Annotated[MeetingType, Depends(find_meeting_type)]) -> MeetingType:
+    """Expose the published details for a guest following a direct link."""
     return item
 
 
@@ -48,6 +50,7 @@ def list_slots(
     now: Annotated[datetime, Depends(get_now)],
     store: Annotated[Store, Depends(get_store)],
 ) -> list[Slot]:
+    """Offer starts that fit between existing meetings across all meeting types."""
     occupied = store.bookings()
     return [
         slot
