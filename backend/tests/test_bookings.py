@@ -12,7 +12,11 @@ from app.store import Store
 
 def test_booking_computes_utc_end(client: TestClient, booking_request: dict[str, str]) -> None:
     """Guests receive normalized contacts and the end time set by the owner."""
-    response = client.post("/bookings", json=booking_request | {"endAt": "2000-01-01T00:00:00Z"})
+    response = client.post(
+        "/bookings",
+        json=booking_request
+        | {"endAt": "2000-01-01T00:00:00Z", "startAt": "2026-11-03T13:00:00.0000000+03:00"},
+    )
     assert response.status_code == 201
     result = Booking.model_validate(response.json())
     assert result.guestName == "Ada"
@@ -25,6 +29,13 @@ def test_booking_computes_utc_end(client: TestClient, booking_request: dict[str,
     ("start", "reason"),
     [
         ("2026-11-03T09:00:00Z", "past"),
+        ("2026-11-03T08:59:59.9999999Z", "past"),
+        ("2026-11-03T09:00:00.0000001Z", "off_grid"),
+        ("2026-11-03T13:00:00.000000001+03:00", "off_grid"),
+        ("2026-11-17T06:00:00.0000001Z", "outside_window"),
+        ("0001-01-01T00:00:00+01:00", "past"),
+        ("9999-12-31T23:00:00Z", "outside_window"),
+        ("9999-12-31T23:59:59-01:00", "outside_window"),
         ("2026-11-17T00:01:00Z", "outside_window"),
         ("2026-11-07T09:01:00Z", "off_grid"),
         ("2026-11-07T09:00:00Z", "outside_working_hours"),

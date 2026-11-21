@@ -18,15 +18,18 @@ def get_now() -> datetime:
     return datetime.now(UTC)
 
 
-def unavailable_reason(start: datetime, minutes: int, now: datetime) -> Reason | None:
+def unavailable_reason(
+    start: datetime, minutes: int, now: datetime, *, submicrosecond: bool = False
+) -> Reason | None:
     """Return the first applicable reason in booking validation order."""
-    if start <= now:
+    if start < now or (start == now and not submicrosecond):
         return Reason.past
-    local = start.astimezone(MOSCOW)
     today = now.astimezone(MOSCOW).date()
-    if not 0 <= (local.date() - today).days < WINDOW_DAYS:
+    window_end = datetime.combine(today + timedelta(days=WINDOW_DAYS), time.min, MOSCOW)
+    if start >= window_end:
         return Reason.outside_window
-    if local.minute % GRID_MINUTES or local.second or local.microsecond:
+    local = start.astimezone(MOSCOW)
+    if local.minute % GRID_MINUTES or local.second or local.microsecond or submicrosecond:
         return Reason.off_grid
     closing = datetime.combine(local.date(), CLOSE, MOSCOW)
     if local.weekday() >= 5 or local.time() < OPEN or local + timedelta(minutes=minutes) > closing:

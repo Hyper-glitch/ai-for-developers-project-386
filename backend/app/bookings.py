@@ -1,14 +1,21 @@
 """Create bookings against the owner's shared schedule."""
 
+import re
 from datetime import UTC, datetime, timedelta
-from typing import Annotated
+from typing import Annotated, Self
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
-from pydantic import ConfigDict, field_validator
+from pydantic import (
+    ConfigDict,
+    ModelWrapValidatorHandler,
+    PrivateAttr,
+    field_validator,
+    model_validator,
+)
 
-from app.generated.models import Booking, Code, CreateBooking, Error
+from app.generated.models import Booking, Code, CreateBooking, Error, Reason
 from app.schedule import get_now, unavailable_reason
 from app.slots import MeetingTypeNotFoundError
 from app.store import Store, get_store
@@ -20,6 +27,7 @@ class BookingInput(CreateBooking):
     """Normalize contact details before checking their constraints."""
 
     model_config = ConfigDict(str_strip_whitespace=True)
+    _submicrosecond: bool = PrivateAttr(default=False)
 
     @field_validator("startAt", mode="before")
     @classmethod
@@ -28,6 +36,19 @@ class BookingInput(CreateBooking):
         if not isinstance(raw, str) or ":" not in raw:
             raise ValueError("Expected an ISO timestamp with a UTC offset")
         return raw
+
+    @model_validator(mode="wrap")
+    @classmethod
+    def preserve_fraction(cls, raw: object, handler: ModelWrapValidatorHandler[Self]) -> Self:
+        """Keep any nonzero digits discarded by datetime's microsecond precision."""
+        body = handler(raw)
+        if isinstance(raw, dict) and isinstance(start := raw.get("startAt"), str):
+            body._submicrosecond = re.search(r"[.,][0-9]{6}[0-9]*[1-9]", start) is not None
+        return body
+
+    def unavailable_reason(self, minutes: int, now: datetime) -> Reason | None:
+        """Apply the schedule to the full precision supplied by the guest."""
+        return unavailable_reason(self.startAt, minutes, now, submicrosecond=self._submicrosecond)
 
 
 @router.post(
@@ -47,10 +68,10 @@ def create_booking(
         item = store.meeting_types[body.meetingTypeId]
     except KeyError as exc:
         raise MeetingTypeNotFoundError from exc
-    start = body.startAt.astimezone(UTC)
-    if reason := unavailable_reason(start, item.durationMinutes.value, now):
+    if reason := body.unavailable_reason(item.durationMinutes.value, now):
         error = Error(code=Code.slot_unavailable, message="Slot unavailable", reason=reason)
         return JSONResponse(status_code=422, content=error.model_dump(exclude_none=True))
+    start = body.startAt.astimezone(UTC)
     booking = Booking(
         **body.model_dump(exclude={"startAt"}),
         id=uuid4(),
