@@ -64,3 +64,16 @@ def ongoing_request(reserved_slot: Booking, booking_request: dict[str, str]) -> 
     instant = datetime.fromisoformat("2026-11-03T10:05:00Z")
     app.dependency_overrides[get_now] = lambda: instant
     return booking_request
+
+
+@pytest.fixture
+def crossing_request(
+    client: TestClient, reserved_slot: Booking, booking_request: dict[str, str]
+) -> dict[str, str]:
+    """Prepare a different meeting type that can straddle either booked boundary."""
+    response = client.post(
+        "/meeting-types", json={"title": "Review", "description": "", "durationMinutes": 30}
+    )
+    assert response.status_code == 201
+    meeting_type = MeetingType.model_validate(response.json())
+    return booking_request | {"meetingTypeId": str(meeting_type.id)}
