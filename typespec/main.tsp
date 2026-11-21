@@ -41,9 +41,23 @@ model Error {
   fields?: FieldError[];
 }
 
+model Slot {
+  startAt: utcDateTime;
+  endAt: utcDateTime;
+}
+
+model MeetingTypeNotFound {
+  @statusCode status: 404;
+  @body error: Error;
+}
+
 @route("/meeting-types")
 @tag("meeting-types")
 interface MeetingTypes {
+  @route("{id}") @get op get(@path @format("uuid") id: string): MeetingType | MeetingTypeNotFound;
+
+  @route("{id}/slots") @get op slots(@path @format("uuid") id: string): Slot[] | MeetingTypeNotFound;
+
   /** List the owner's meeting types in creation order. */
   @get op list(): MeetingType[];
 

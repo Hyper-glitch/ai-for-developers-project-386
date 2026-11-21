@@ -61,6 +61,58 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/CreateMeetingType'
+  /meeting-types/{id}:
+    get:
+      operationId: MeetingTypes_get
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeetingType'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - meeting-types
+  /meeting-types/{id}/slots:
+    get:
+      operationId: MeetingTypes_slots
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Slot'
+        '404':
+          description: The server cannot find the requested resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+        - meeting-types
 components:
   schemas:
     CreateMeetingType:
@@ -134,6 +186,18 @@ components:
           format: uuid
       allOf:
         - $ref: '#/components/schemas/CreateMeetingType'
+    Slot:
+      type: object
+      required:
+        - startAt
+        - endAt
+      properties:
+        startAt:
+          type: string
+          format: date-time
+        endAt:
+          type: string
+          format: date-time
 servers:
   - url: http://localhost:8000
     description: Local development server

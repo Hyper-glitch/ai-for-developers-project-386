@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { MeetingTypesCreateData, MeetingTypesCreateErrors, MeetingTypesCreateResponses, MeetingTypesListData, MeetingTypesListResponses, SystemHealthData, SystemHealthResponses } from './types.gen';
+import type { MeetingTypesCreateData, MeetingTypesCreateErrors, MeetingTypesCreateResponses, MeetingTypesGetData, MeetingTypesGetErrors, MeetingTypesGetResponses, MeetingTypesListData, MeetingTypesListResponses, MeetingTypesSlotsData, MeetingTypesSlotsErrors, MeetingTypesSlotsResponses, SystemHealthData, SystemHealthResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -36,3 +36,7 @@ export const meetingTypesCreate = <ThrowOnError extends boolean = false>(options
         ...options.headers
     }
 });
+
+export const meetingTypesGet = <ThrowOnError extends boolean = false>(options: Options<MeetingTypesGetData, ThrowOnError>): RequestResult<MeetingTypesGetResponses, MeetingTypesGetErrors, ThrowOnError> => (options.client ?? client).get<MeetingTypesGetResponses, MeetingTypesGetErrors, ThrowOnError>({ url: '/meeting-types/{id}', ...options });
+
+export const meetingTypesSlots = <ThrowOnError extends boolean = false>(options: Options<MeetingTypesSlotsData, ThrowOnError>): RequestResult<MeetingTypesSlotsResponses, MeetingTypesSlotsErrors, ThrowOnError> => (options.client ?? client).get<MeetingTypesSlotsResponses, MeetingTypesSlotsErrors, ThrowOnError>({ url: '/meeting-types/{id}/slots', ...options });
