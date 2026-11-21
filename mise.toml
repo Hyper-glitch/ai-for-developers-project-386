@@ -137,7 +137,15 @@ depends = ["test:backend", "test:frontend"]
 [tasks."gen:verify"]
 description = "Fail if generated files are out of date with the TypeSpec contract"
 depends = ["gen"]
-run = "git diff --exit-code -- openapi frontend/src/client backend/app/generated"
+run = """
+set -- openapi frontend/src/client backend/app/generated
+git diff --exit-code -- "$@"
+untracked=$(git ls-files --others --exclude-standard -- "$@")
+if [ -n "$untracked" ]; then
+  printf 'Untracked generated files:\\n%s\\n' "$untracked" >&2
+  exit 1
+fi
+"""
 
 [tasks.check]
 description = "Run every check: generated code, linters, type checks, tests"
