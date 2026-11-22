@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/Hyper-glitch/ai-for-developers-project-386/compare/v0.2.0...v0.3.0) (2026-11-22)
+
+
+### Features
+
+* упаковать сервис бронирования в Docker ([#27](https://github.com/Hyper-glitch/ai-for-developers-project-386/issues/27)) ([5933df7](https://github.com/Hyper-glitch/ai-for-developers-project-386/commit/5933df7cb974d8c40ac55f97ac1690871b6157b8))
+
 ## [0.2.0](https://github.com/Hyper-glitch/ai-for-developers-project-386/releases/tag/v0.2.0) (2026-11-21)
 
 
