@@ -3,7 +3,7 @@
 
 [![hexlet-check](https://github.com/Hyper-glitch/ai-for-developers-project-386/actions/workflows/hexlet-check.yml/badge.svg)](https://github.com/Hyper-glitch/ai-for-developers-project-386/actions)
 
-Разработайте совместно с ИИ сервис для бронирования календаря
+Откройте [календарь звонков на Railway](https://booking-calendar-production-28e04b8e.up.railway.app/). В разделе «Владельцу» можно создать тип встречи и посмотреть записи, в разделе «Записаться» — выбрать время.
 
 Учебный проект Хекслета: https://ru.hexlet.io/programs/ai-for-developers
 Как это должно работать: https://files.hexlet.app/a/2ipc5m
