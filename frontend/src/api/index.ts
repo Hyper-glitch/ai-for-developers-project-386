@@ -17,7 +17,9 @@ import {
 } from '../client';
 
 client.setConfig({
-  baseUrl: import.meta.env.VITE_API_URL ?? 'http://localhost:8000',
+  baseUrl:
+    import.meta.env.VITE_API_URL ??
+    (import.meta.env.PROD ? window.location.origin : 'http://localhost:8000'),
 });
 
 export * from '../client';

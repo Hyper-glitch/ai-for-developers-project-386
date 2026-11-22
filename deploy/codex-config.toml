@@ -1,0 +1,6 @@
+[mcp_servers.render]
+url = "https://mcp.render.com/mcp"
+oauth_client_id = "codex"
+
+[mcp_servers.railway]
+url = "https://mcp.railway.com"
