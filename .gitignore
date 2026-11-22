@@ -14,6 +14,9 @@ node_modules/
 # Local env
 .env
 .env.local
+.env.*
+!.env.example
+.codex/
 
 # Claude Code: skills are restored from skills-lock.json, local settings stay local
 .claude/skills/
